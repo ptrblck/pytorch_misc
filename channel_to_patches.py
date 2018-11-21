@@ -1,9 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Wed Nov 21 01:25:34 2018
+Permute image data so that channel values of each pixel are flattened to an image patch around the pixel.
 
-@author: pbialecki
+@author: ptrblck
 """
 
 import torch
