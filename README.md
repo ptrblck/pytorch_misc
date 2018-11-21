@@ -14,6 +14,7 @@ Some scripts might be a good starter to create a tutorial.
   * [adaptive_pooling_torchvision](https://github.com/ptrblck/pytorch_misc/blob/master/adaptive_pooling_torchvision.py) - Example of using adaptive pooling layers in pretrained models to use different spatial input shapes.
   * [batch_norm_manual](https://github.com/ptrblck/pytorch_misc/blob/master/batch_norm_manual.py) - Comparison of PyTorch BatchNorm layers and a manual calculation.
   * [change_crop_in_dataset](https://github.com/ptrblck/pytorch_misc/blob/master/change_crop_in_dataset.py) - Change the image crop size on the fly using a Dataset.
+  * [channel_to_patches](https://github.com/ptrblck/pytorch_misc/blob/master/channel_to_patches.py) - Permute image data so that channel values of each pixel are flattened to an image patch around the pixel.
   * [conv_rnn](https://github.com/ptrblck/pytorch_misc/blob/master/conv_rnn.py) - Combines a 3DCNN with an RNN; uses windowed frames as inputs.
   * [csv_chunk_read](https://github.com/ptrblck/pytorch_misc/blob/master/csv_chunk_read.py) - Provide data chunks from continuous .csv file.
   * [densenet_forwardhook](https://github.com/ptrblck/pytorch_misc/blob/master/densenet_forwardhook.py) - Use forward hooks to get intermediate activations from `densenet121`. Uses separate modules to process these activations further.
