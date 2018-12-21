@@ -11,7 +11,8 @@ import numpy as np
 
 
 # Create dummy image
-im = torch.zeros(1, 1, 10, 10)
+batch_size = 1
+im = torch.zeros(batch_size, 1, 10, 10)
 im[:, :, :, 2] = 1.
 
 # Set angle
@@ -29,7 +30,7 @@ for r in range(im.size(2)):
         y = torch.round(y) + y_mid
 
         if (x >= 0 and y >= 0 and x < im.size(2) and y < im.size(3)):
-            im_rot[:, :, r, c] = im[:, :, x.long(), y.long()]
+            im_rot[:, :, r, c] = im[:, :, x.long().item(), y.long().item()]
 
 
 # Calculate rotation with inverse rotation matrix
@@ -60,7 +61,7 @@ src_ind[:, 1][src_ind[:, 1] >= im.size(3)] = float(im.size(3)) - 1
 im_rot2 = torch.zeros_like(im)
 src_ind = src_ind.long()
 im_rot2[:, :, xv.view(-1), yv.view(-1)] = im[:, :, src_ind[:, 0], src_ind[:, 1]]
-im_rot2 = im_rot2.view(1, 1, 10, 10)
+im_rot2 = im_rot2.view(batch_size, 1, 10, 10)
 
 print('Using method 1: {}'.format(im_rot))
 print('Using method 2: {}'.format(im_rot2))
