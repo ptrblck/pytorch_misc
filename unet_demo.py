@@ -104,7 +104,7 @@ class UNet(nn.Module):
         x1 = self.down1(x)
         x2 = self.down2(x1)
         x3 = self.down3(x2)
-        x4 = self.down4(x4)
+        x4 = self.down4(x3)
         # Decoder
         x_up = self.up4(x4, x3)
         x_up = self.up3(x_up, x2)
