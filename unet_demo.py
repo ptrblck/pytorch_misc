@@ -85,7 +85,7 @@ class UNet(nn.Module):
                               padding, stride)
         
         self.up4 = UpConv(16 * out_channels, 8 * out_channels, 8 * out_channels,
-                          kel_size, padding, stride)
+                          kernel_size, padding, stride)
 
         self.up3 = UpConv(8 * out_channels, 4 * out_channels, 4 * out_channels,
                           kernel_size, padding, stride)
