@@ -25,6 +25,7 @@ Some scripts might be a good starter to create a tutorial.
   * [mnist_permuted](https://github.com/ptrblck/pytorch_misc/blob/master/mnist_permuted.py) - MNIST training using permuted pixel locations.
   * [model_sharding_data_parallel](https://github.com/ptrblck/pytorch_misc/blob/master/model_sharding_data_parallel.py) - Model sharding with `DataParallel` using 2 pairs of 2 GPUs.
   * [momentum_update_nograd](https://github.com/ptrblck/pytorch_misc/blob/master/momentum_update_nograd.py) - Script to see how parameters are updated when an optimizer is used with momentum/running estimates, even if gradients are zero.
+  * [pytorch_redis](https://github.com/ptrblck/pytorch_misc/blob/master/pytorch_redis.py) - Script to demonstrate the loading data from redis using a PyTorch Dataset and DataLoader.
   * [shared_array](https://github.com/ptrblck/pytorch_misc/blob/master/shared_array.py) - Script to demonstrate the usage of shared arrays using multiple workers.
   * [shared_dict](https://github.com/ptrblck/pytorch_misc/blob/master/shared_dict.py) - Script to demonstrate the usage of shared dicts using multiple workers.
   * [unet_demo](https://github.com/ptrblck/pytorch_misc/blob/master/unet_demo.py) - Simple UNet demo.
