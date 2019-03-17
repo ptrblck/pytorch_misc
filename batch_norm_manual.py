@@ -1,5 +1,6 @@
 """
-Comparison of PyTorch BatchNorm layers and a manual calculation
+Comparison of manual BatchNorm2d layer implementation in Python and
+nn.BatchNorm2d
 
 @author: ptrblck
 """
@@ -7,58 +8,106 @@ Comparison of PyTorch BatchNorm layers and a manual calculation
 import torch
 import torch.nn as nn
 
-# Init BatchNorm2d
-bn2 = nn.BatchNorm2d(3)
-bn2.weight.data.fill_(0.1)
-bn2.bias.data.zero_()
 
-# Create 2D tensor
-tmp = torch.cat((torch.ones(1, 2, 1), torch.ones(1, 2, 1) * 2), 2)
-x2 = torch.cat((torch.zeros(1, 2, 2), tmp, tmp * 2), 0)
-x2.unsqueeze_(0)
+def compare_bn(bn1, bn2):
+    err = False
+    if not torch.allclose(bn1.running_mean, bn2.running_mean):
+        print('Diff in running_mean: {} vs {}'.format(
+            bn1.running_mean, bn2.running_mean))
+        err = True
 
-# Calculate stats
-x2_mean = x2.mean(-1).mean(-1)
-num_elem2 = 4
-x2_var_unbiased = ((x2 - x2_mean.view(1, 3, 1, 1))**2).sum(2).sum(2) / (num_elem2 - 1)
-print('x2: ', x2)
-print('x2 mean: ', x2_mean)
-print('x2 var_unbiased: ', x2_var_unbiased)
-print('bn2 running_mean: ', bn2.running_mean)
-print('bn2 running_var: ', bn2.running_var)
-print('Expected bn2 running_mean after forward pass: ',
-      bn2.running_mean * (1 - bn2.momentum) + x2_mean * bn2.momentum)
-print('Expected bn2 running_var after forward pass: ',
-      bn2.running_var * (1 - bn2.momentum) + x2_var_unbiased * bn2.momentum)
+    if not torch.allclose(bn1.running_var, bn2.running_var):
+        print('Diff in running_var: {} vs {}'.format(
+            bn1.running_var, bn2.running_var))
+        err = True
 
-# Perform forward pass on 2D data
-output2 = bn2(x2)
-print('bn2 running mean after forward pass:', bn2.running_mean)
-print('bn2 running var after forward pass:', bn2.running_var)
+    if bn1.affine and bn2.affine:
+        if not torch.allclose(bn1.weight, bn2.weight):
+            print('Diff in weight: {} vs {}'.format(
+                bn1.weight, bn2.weight))
+            err = True
 
-# Init BatchNorm3d
-bn3 = nn.BatchNorm3d(3)
-bn3.weight.data.fill_(0.1)
-bn3.bias.data.zero_()
+        if not torch.allclose(bn1.bias, bn2.bias):
+            print('Diff in bias: {} vs {}'.format(
+                bn1.bias, bn2.bias))
+            err = True
 
-# Create 3D tensor from 2D
-x3 = x2.unsqueeze(2).repeat(1, 1, 5, 1, 1)
+    if not err:
+        print('All parameters are equal!')
 
-# Calculate stats
-x3_mean = x3.mean(-1).mean(-1).mean(-1)
-num_elem3 = 5 * 4
-x3_var_unbiased = ((x3 - x3_mean.view(1, 3, 1, 1, 1))**2).sum(2).sum(2).sum(2) / (num_elem3 - 1)
-print('x3: ', x3)
-print('x3 mean: ', x3_mean)
-print('x3 var_unbiased: ', x3_var_unbiased)
-print('bn3 running_mean: ', bn3.running_mean)
-print('bn3 running_var: ', bn3.running_var)
-print('Expected bn3 running_mean after forward pass: ',
-      bn3.running_mean * (1 - bn3.momentum) + x3_mean * bn3.momentum)
-print('Expected bn3 running_var after forward pass: ',
-      bn3.running_var * (1 - bn3.momentum) + x3_var_unbiased * bn3.momentum)
 
-# Perform forward pass on 3D data
-output3 = bn3(x3)
-print('bn3 running mean after forward pass:', bn3.running_mean)
-print('bn3 running var after forward pass:', bn3.running_var)
+class MyBatchNorm2d(nn.BatchNorm2d):
+    def __init__(self, num_features, eps=1e-5, momentum=0.1,
+                 affine=True, track_running_stats=True):
+        super(MyBatchNorm2d, self).__init__(
+            num_features, eps, momentum, affine, track_running_stats)
+
+    def forward(self, input):
+        self._check_input_dim(input)
+
+        exponential_average_factor = 0.0
+
+        if self.training and self.track_running_stats:
+            if self.num_batches_tracked is not None:
+                self.num_batches_tracked += 1
+                if self.momentum is None:  # use cumulative moving average
+                    exponential_average_factor = 1.0 / float(self.num_batches_tracked)
+                else:  # use exponential moving average
+                    exponential_average_factor = self.momentum
+
+        # calculate running estimates
+        if self.training:
+            mean = input.mean([0, 2, 3])
+            # use biased var in train
+            var = input.var([0, 2, 3], unbiased=False)
+            n = x.numel() / x.size(1)
+            self.running_mean = exponential_average_factor * mean\
+                + (1 - exponential_average_factor) * self.running_mean
+            # update running_var with unbiased var
+            self.running_var = exponential_average_factor * var * n / (n - 1)\
+                + (1 - exponential_average_factor) * self.running_var
+        else:
+            mean = self.running_mean
+            var = self.running_var
+
+        input = (input - mean[None, :, None, None]) / (torch.sqrt(var[None, :, None, None] + self.eps))
+        if self.affine:
+            input = input * self.weight[None, :, None, None] + self.bias[None, :, None, None]
+
+        return input
+
+
+# Init BatchNorm layers
+my_bn = MyBatchNorm2d(3, affine=True)
+bn = nn.BatchNorm2d(3, affine=True)
+
+compare_bn(my_bn, bn)  # weight and bias should be different
+# Load weight and bias
+my_bn.load_state_dict(bn.state_dict())
+compare_bn(my_bn, bn)
+
+# Run train
+for _ in range(10):
+    scale = torch.randint(1, 10, (1,)).float()
+    bias = torch.randint(-10, 10, (1,)).float()
+    x = torch.randn(10, 3, 100, 100) * scale + bias
+    out1 = my_bn(x)
+    out2 = bn(x)
+    compare_bn(my_bn, bn)
+
+    torch.allclose(out1, out2)
+    print('Max diff: ', (out1 - out2).abs().max())
+
+# Run eval
+my_bn.eval()
+bn.eval()
+for _ in range(10):
+    scale = torch.randint(1, 10, (1,)).float()
+    bias = torch.randint(-10, 10, (1,)).float()
+    x = torch.randn(10, 3, 100, 100) * scale + bias
+    out1 = my_bn(x)
+    out2 = bn(x)
+    compare_bn(my_bn, bn)
+
+    torch.allclose(out1, out2)
+    print('Max diff: ', (out1 - out2).abs().max())
