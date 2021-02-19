@@ -17,11 +17,11 @@ class BaseConv(nn.Module):
 
         self.act = nn.ReLU()
 
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding,
-                               stride)
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size,
+                               stride=stride, padding=padding)
 
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size,
-                               padding, stride)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size,
+                               stride=stride, padding=padding)
 
     def forward(self, x):
         x = self.act(self.conv1(x))
